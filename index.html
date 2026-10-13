@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>automatix360 · Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#f7f7f8;--panel:#fff;--panel2:#f1f0f5;--text:#16151c;--muted:#6b6878;--line:#e7e5ee;--brand:#6d28d9;--brand-soft:#efe9fb;--ok:#15803d;--ok-bg:#dcfce7;--bad:#be123c;--bad-bg:#ffe4ea;--warn:#a16207;--warn-bg:#fef3c7;--info:#1d4ed8;--info-bg:#dbeafe;--shadow:0 1px 2px rgba(20,10,40,.05)}
+:root[data-theme=dark]{--bg:#0f0e14;--panel:#17161f;--panel2:#1f1d29;--text:#f1f0f6;--muted:#9c98ad;--line:#2b2938;--brand:#a78bfa;--brand-soft:#2a2145;--ok:#4ade80;--ok-bg:#12301f;--bad:#fb7185;--bad-bg:#3a1520;--warn:#fbbf24;--warn-bg:#35280b;--info:#60a5fa;--info-bg:#14264a;--shadow:none}
+*{box-sizing:border-box}
+body{margin:0;font-family:Outfit,system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+/* layout */
+.app{display:flex;min-height:100vh}
+.side{width:255px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;padding:18px 16px;border-bottom:1px solid var(--line)}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-weight:700}
+.brand b{font-size:16px}.brand b span{color:var(--brand)}.brand small{display:block;color:var(--muted);font-size:12px}
+.brand .theme{margin-left:auto}
+nav{padding:14px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;color:var(--text);text-decoration:none;border:1px solid transparent}
+nav a svg{width:18px;height:18px;color:var(--muted)}
+nav a.on{background:var(--brand-soft);color:var(--brand);border-color:color-mix(in srgb,var(--brand) 30%,transparent)}
+nav a.on svg{color:var(--brand)}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--line);background:var(--panel)}
+.top h1{font-size:15px;margin:0}.top p{margin:0;color:var(--muted);font-size:12.5px}
+.top .sp{flex:1}
+.menu-btn{display:none}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-weight:600;font-size:12px}
+.pill{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--muted)}
+.icon-btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;width:34px;height:34px;display:grid;place-items:center;color:var(--muted)}
+.icon-btn svg{width:17px;height:17px}
+.content{padding:32px 24px;width:100%;max-width:1100px;margin:0 auto}
+h2.title{font-size:26px;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 22px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);background:none;border:0;padding:0;margin-bottom:14px;text-decoration:none}
+/* cards */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.tile{padding:22px;text-align:left;cursor:pointer;transition:.15s;display:block;width:100%}
+.tile:hover{border-color:var(--brand);transform:translateY(-2px)}
+.tile h3{margin:0 0 2px;font-size:18px}.tile p{margin:0 0 16px;color:var(--muted);font-size:13.5px}
+.tile .cta{display:flex;justify-content:space-between;color:var(--brand);font-size:13.5px;font-weight:500;margin-top:14px}
+.stats{display:flex;gap:18px;align-items:center}
+.stats .legend{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px}
+.docs{display:flex;align-items:center;gap:18px;height:150px}
+.sheet{position:relative;width:96px;height:128px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);padding:12px 10px;flex-shrink:0}
+.sheet.s2{position:absolute;left:14px;top:-8px;transform:rotate(-6deg);opacity:.55}
+.sheet i{display:block;height:6px;border-radius:3px;background:var(--line);margin-bottom:8px}
+.sheet i:first-child{background:var(--brand);width:60%}
+.sheet i:nth-child(3){width:80%}.sheet i:nth-child(5){width:50%}
+.sheet-wrap{position:relative;width:110px;height:140px;flex-shrink:0}
+.sheet-wrap .sheet:last-child{position:absolute;left:14px;top:6px}
+.kpi b{font-size:30px;display:block}.kpi span{color:var(--muted);font-size:13px}
+/* table */
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12px;color:var(--brand);font-weight:600}
+.inp{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 12px;min-width:0;width:100%}
+.inp:focus{outline:2px solid color-mix(in srgb,var(--brand) 45%,transparent);border-color:var(--brand)}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:9px 14px;font-weight:500}
+.btn:hover{border-color:var(--brand)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+:root[data-theme=dark] .btn.primary{color:#1a1030}
+.btn.danger{color:var(--bad)}
+.btn svg{width:16px;height:16px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:16px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{background:var(--panel2);text-align:left;font-size:12.5px;padding:12px 14px;white-space:nowrap}
+td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:top}
+td.notes{max-width:240px;color:var(--muted)}
+.badge{font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.b-ok{background:var(--ok-bg);color:var(--ok)}.b-bad{background:var(--bad-bg);color:var(--bad)}
+.b-warn{background:var(--warn-bg);color:var(--warn)}.b-info{background:var(--info-bg);color:var(--info)}.b-mute{background:var(--panel2);color:var(--muted)}
+.note{color:var(--muted);font-size:12.5px;margin:10px 2px}
+.pager{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;margin-top:6px}
+.cards-m{display:none}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+/* operators */
+.opcard{padding:18px;margin-bottom:14px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;font-size:13px}
+.chip.on{background:var(--brand-soft);color:var(--brand);border-color:var(--brand)}
+.err{color:var(--bad);font-size:12.5px;min-height:16px}
+.opcard .head{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.opcard .head .avatar{width:42px;height:42px;font-size:14px}
+/* calendar */
+.page-head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.page-head>div:first-child{flex:1;min-width:200px}
+.page-head .sub{margin:0}
+.page-head .acts{display:flex;gap:8px;flex-wrap:wrap}
+.btn.sm{padding:7px 13px;font-size:13px;border-radius:999px}
+.btn.off,nav a.off{opacity:.55}
+.calbox{background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 6px 24px rgba(80,40,160,.10)}
+.calbar{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--panel2)}
+.calbar .ttl{flex:1;text-align:center;font-size:19px;font-weight:500}
+.calbar .ttl i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:8px;vertical-align:middle}
+.calbar .ttl span{color:var(--brand)}
+.nbtn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--brand);font-size:18px;line-height:1}
+.hoy{background:var(--brand);color:#fff;border:0;border-radius:10px;padding:8px 16px;font-weight:600}
+:root[data-theme=dark] .hoy{color:#1a1030}
+.dow,.mgrid{display:grid;grid-template-columns:repeat(7,1fr)}
+.dow div{text-align:center;padding:12px 0;font-size:12.5px;color:var(--muted);background:var(--panel2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell{min-height:108px;padding:10px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background-color:var(--panel);background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:14px 14px;background-position:-1px -1px;min-width:0;overflow:hidden}
+.cell:nth-child(7n){border-right:0}
+.cell.we{background-color:var(--panel2);background-image:none}
+.cell.we .n{color:var(--brand);font-weight:600}
+.cell.out .n{opacity:.3}
+.cell .n{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:50%;font-size:12.5px;font-weight:500;margin-bottom:4px}
+.cell.today{outline:2px solid var(--brand);outline-offset:-2px;background-image:none}
+.cell.today .n{background:var(--brand);color:#fff}
+:root[data-theme=dark] .cell.today .n{color:#1a1030}
+.ev{display:flex;align-items:center;gap:5px;font-size:11px;padding:3px 6px;margin-bottom:4px;border-radius:6px;background:var(--brand-soft);border-left:2px solid var(--brand);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev::before{content:"";width:5px;height:5px;border-radius:50%;background:#16a34a;flex-shrink:0}
+.more{font-size:11px;color:var(--muted)}
+.cfg{display:grid;grid-template-columns:260px 1fr;gap:22px;align-items:start}
+.cfgnav{display:flex;flex-direction:column;gap:6px}
+.cfgnav>div{display:flex;gap:10px;align-items:center;padding:10px;border-radius:14px;border:1px solid transparent}
+.cfgnav b{display:block;font-weight:500;font-size:14px}.cfgnav small{color:var(--muted);font-size:11.5px}
+.cfgnav .ic{width:34px;height:34px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;color:var(--muted);flex-shrink:0}
+.cfgnav .ic svg{width:16px;height:16px}
+.cfgnav .on{border-color:var(--brand);background:var(--panel)}
+.cfgnav .off{opacity:.5;cursor:pointer}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.seg button{background:var(--panel);border:0;padding:8px 14px;color:var(--muted)}
+.seg button.on{background:var(--brand-soft);color:var(--brand);font-weight:600}
+/* animaciones reports */
+.tile{display:flex;flex-direction:column}
+.tile .cta{margin-top:auto;padding-top:14px}
+@keyframes ring{from{stroke-dasharray:0 var(--c)}to{stroke-dasharray:var(--a) var(--c)}}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes fan{from{opacity:0;transform:rotate(0) translateX(0)}to{opacity:.55;transform:rotate(-6deg)}}
+@keyframes line{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.ring-ok{animation:ring 1.2s cubic-bezier(.3,.7,.2,1) .15s both}
+.bar{transform-box:fill-box;transform-origin:bottom;animation:grow .7s cubic-bezier(.3,.7,.2,1) both}
+.tile .stats .legend span,.tile .stats text{animation:fade .6s ease .5s both}
+.sheet-wrap{animation:rise .7s ease both,floaty 4s ease-in-out .8s infinite}
+.sheet.s2{animation:fan .8s ease .3s both}
+.sheet i{transform-origin:left;animation:line .5s ease both}
+.sheet i:nth-child(1){animation-delay:.5s}.sheet i:nth-child(2){animation-delay:.6s}.sheet i:nth-child(3){animation-delay:.7s}.sheet i:nth-child(4){animation-delay:.8s}.sheet i:nth-child(5){animation-delay:.9s}
+.kpi{animation:rise .7s ease .2s both}
+.tile:hover .cta span:last-child{transform:translateX(4px)}
+.cta span:last-child{transition:transform .2s}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+/* login */
+.login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.login .card{width:100%;max-width:400px;padding:28px}
+.login h2{margin:14px 0 4px}
+.login .field{margin-bottom:14px}
+.demo{margin-top:16px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.demo button{margin:4px 4px 0 0;font-size:12.5px;padding:5px 10px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:12px;font-size:14px;z-index:50}
+.scrim{display:none}
+@media(max-width:820px){
+ .side{position:fixed;z-index:30;left:-270px;transition:.2s}
+ .side.open{left:0}
+ .side.open~.scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20}
+ .menu-btn{display:grid}
+ .top{padding:12px 14px}.content{padding:20px 14px}
+ .pill:not(.keep){display:none}
+ .grid2{grid-template-columns:1fr}
+ .cell{min-height:64px;padding:4px 2px}.ev{font-size:9.5px;padding:2px 3px}.ev::before{display:none}.cfg{grid-template-columns:1fr}.cfgnav{flex-direction:row;overflow-x:auto}.cfgnav>div{min-width:170px}.calbar .ttl{font-size:16px}
+ .tablewrap.desk{display:none}.cards-m{display:flex;flex-direction:column;gap:10px}
+ .mc{padding:14px;font-size:14px}.mc .h{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
+ .mc dl{margin:0;display:grid;grid-template-columns:90px 1fr;gap:4px 8px}.mc dt{color:var(--muted)}.mc dd{margin:0}
+ .tools .field{flex:1 1 140px}.tools .btn{flex:1 1 130px;justify-content:center}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="toast" class="toast hidden"></div>
+<script>
+/* ============ Iconos ============ */
+const I={
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+ rep:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+ ops:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M17 4.5a3.5 3.5 0 010 7M21.5 20c0-2.6-1.5-4.4-3.5-5.2"/></svg>',
+ out:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4H5a2 2 0 00-2 2v12a2 2 0 002 2h4M16 8l4 4-4 4M20 12H9"/></svg>',
+ moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 14.5A8 8 0 019.5 4 8 8 0 1020 14.5z"/></svg>',
+ menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+ xls:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 13l4 5M13 13l-4 5"/></svg>',
+ pdf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8zM14 3v5h5M9 14h6M9 17h4"/></svg>',
+ save:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h11l3 3v15H5zM8 3v5h7V3M8 21v-7h8v7"/></svg>',
+ trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+ back:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>'
+};
+/* ============ Datos / estado ============ */
+const LS=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const RM=k=>{try{localStorage.removeItem(k)}catch(e){}};
+const SEED_OPS=[
+ {id:1,nombre:'Mateo',apellido:'Coronel',email:'mateo@automatix360.com',pass:'1234',pref:'+593',tel:'958729456',cabinas:['Sala Principal'],activo:true},
+ {id:2,nombre:'Natei',apellido:'Cano',email:'natei@automatix360.com',pass:'1234',pref:'+39',tel:'3331234567',cabinas:['Sala Secundaria'],activo:true},
+ {id:3,nombre:'Lucía',apellido:'Pérez',email:'lucia@automatix360.com',pass:'1234',pref:'+593',tel:'987654321',cabinas:['Sala Principal','Sala Secundaria'],activo:false}
+];
+let ops=LS('ops')||SEED_OPS; SV('ops',ops);
+const ESTADOS=['Confirmada','Modificada','Rechazada','Pendiente','Cancelada'];
+const EST_CLS={Confirmada:'b-ok',Modificada:'b-info',Rechazada:'b-bad',Pendiente:'b-warn',Cancelada:'b-mute'};
+const CLIENTES=[['Natei Cano','+593958729456'],['Mateo Coronel','+390958729456'],['Ana Torres','+593991112233'],['Luis Vega','+593984445566'],['Sofía Ríos','+393331112233'],['Carlos Mena','+593997778899']];
+const NOTAS=['Primera visita','Alergia al látex','Prefiere horario de tarde','Reprogramada por el cliente','Sin observaciones','Traer documentos','Cliente frecuente','Solicita factura'];
+const DURS=[30,45,60,90];
+function mkCitas(){
+ const out=[],base=new Date(2026,8,14,9,0);let s=7;
+ const r=n=>{s=(s*9301+49297)%233280;return Math.floor(s/233280*n)};
+ for(let i=0;i<34;i++){
+  const d=new Date(base);d.setDate(base.getDate()+Math.floor(i*1.2));d.setHours(9+r(9),r(2)*30);
+  const c=CLIENTES[r(CLIENTES.length)];
+  out.push({id:i+1,cliente:c[0],tel:c[1],fecha:d.getTime(),operador:SEED_OPS[r(3)].nombre+' '+SEED_OPS[r(3)].apellido,dur:DURS[r(4)],notas:NOTAS[r(NOTAS.length)],estado:ESTADOS[r(5)]});
+ }
+ return out.sort((a,b)=>a.fecha-b.fecha);
+}
+// operador asignado coherente: usar siempre un operador de SEED
+const CITAS=mkCitas().map(c=>{const o=SEED_OPS[c.id%3];c.operador=o.nombre+' '+o.apellido;return c});
+const NOTIFS=[
+ ['+390958729456','Mateo coronel',new Date(2026,9,12,11,49),'Failed'],['+593958729456','Natei Cano',new Date(2026,9,12,11,48),'Failed'],
+ ['+593958729456','Natei Cano',new Date(2026,9,1,13,12),'Sent'],['+593958729456','Natei Cano',new Date(2026,8,30,12,6),'Sent'],
+ ['+593958729456','Natei Cano',new Date(2026,8,30,11,51),'Sent'],['+390958729456','Mateo coronel',new Date(2026,8,30,11,48),'Failed']
+];
+const fmtF=t=>{const d=new Date(t);const p=n=>String(n).padStart(2,'0');return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()}, ${p(d.getHours())}:${p(d.getMinutes())}`};
+const iso=t=>{const d=new Date(t);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const toast=m=>{const t=document.getElementById('toast');t.textContent=m;t.classList.remove('hidden');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.add('hidden'),2600)};
+
+/* ============ Sesión ============ */
+// session: {role:'admin'} | {role:'op', id}
+let session=LS('session');
+function validSession(){
+ if(!session)return false;
+ if(session.role==='op'){
+  const o=ops.find(x=>x.id===session.id);
+  if(!o||!o.activo){session=null;RM('session');return false}
+ }
+ return true;
+}
+function login(email,pass){
+ ops=LS('ops')||ops;
+ const o=ops.find(x=>x.email.toLowerCase()===email.trim().toLowerCase());
+ if(!o||o.pass!==pass)return 'Correo o contraseña incorrectos.';
+ if(!o.activo)return 'Tu cuenta está inactiva. Contacta al administrador.';
+ session={role:'op',id:o.id};SV('session',session);return null;
+}
+function logout(){session=null;RM('session');location.hash='#/login';render()}
+window.addEventListener('storage',()=>{ops=LS('ops')||ops;session=LS('session');render()});
+
+/* ============ Tema ============ */
+function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('theme',t)}catch(e){}}
+setTheme((()=>{try{return localStorage.getItem('theme')}catch(e){}})()||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
+const toggleTheme=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+
+/* ============ Router ============ */
+const routes={
+ '/reports':{t:'Reports',s:'Historial de notificaciones y reporte de citas',admin:true,fn:vReports},
+ '/reports/notificaciones':{t:'Historial de notificaciones',s:'Monitorea los mensajes enviados',admin:true,fn:vNotifs,parent:'/reports'},
+ '/reports/citas':{t:'Reporte de citas',s:'Citas realizadas por rango de fechas',admin:true,fn:vCitas,parent:'/reports'},
+ '/calendario':{t:'Calendario',s:'Reservas y agenda',fn:vCal},
+ '/operadores':{t:'Operadores',s:'Personal, acceso y roles',admin:true,fn:vOps}
+};
+const path=()=>(location.hash.slice(1)||'/');
+window.addEventListener('hashchange',render);
+
+function render(){
+ const root=document.getElementById('root');
+ if(!validSession()){
+  if(path()!=='/login')location.hash='#/login';
+  root.innerHTML=vLogin();bindLogin();return;
+ }
+ let p=path();
+ if(p==='/'||p==='/login')p=session.role==='admin'?'/reports':'/calendario';
+ let r=routes[p];
+ if(!r||(r.admin&&session.role!=='admin')){p='/calendario';r=routes[p]}
+ if(location.hash!=='#'+p){history.replaceState(null,'','#'+p)}
+ const top=p.startsWith('/reports')?'/reports':p;
+ const chev='<span style="margin-left:auto;opacity:.6">›</span>';
+ const plug='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3v5M15 3v5M6 8h12v4a6 6 0 01-12 0zM12 18v3"/></svg>',card='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>',gear='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>';
+ const nav=[['/calendario','Calendario',I.cal]];
+ if(session.role==='admin')nav.push(['','Integraciones',plug],['/reports','Reports',I.rep],['','Billing',card],['','Configuración',gear]);
+ const who=session.role==='admin'?{n:'Administrador',i:'AD'}:(o=>({n:o.nombre+' '+o.apellido,i:(o.nombre[0]+o.apellido[0]).toUpperCase()}))(ops.find(x=>x.id===session.id));
+ root.innerHTML=`<div class="app">
+ <aside class="side" id="side">
+  <div class="brand"><div class="logo">a</div><div><b>automatix<span>360</span></b><small>Panel</small></div>
+   <button class="icon-btn theme" onclick="toggleTheme()" title="Tema claro/oscuro">${I.moon}</button></div>
+  <nav>${nav.map(n=>n[0]?`<a href="#${n[0]}" class="${top===n[0]?'on':''}" onclick="closeMenu()">${n[2]}${n[1]}${top===n[0]?chev:''}</a>`:`<a href="#" class="off" onclick="NA();return false">${n[2]}${n[1]}</a>`).join('')}
+   <a href="#" onclick="logout();return false" style="margin-top:auto">${I.out}Cerrar sesión</a></nav>
+ </aside><div class="scrim" onclick="closeMenu()"></div>
+ <div class="main">
+  <header class="top"><button class="icon-btn menu-btn" onclick="document.getElementById('side').classList.add('open')">${I.menu}</button>
+   <div><h1>${r.t}</h1><p>${r.s}</p></div><div class="sp"></div>
+   <span class="pill">⌕ Buscar</span><span class="pill">ES ⌄</span><span class="pill keep" style="padding:6px 10px">🔔</span><div class="avatar" title="${who.n} · ${session.role==='admin'?'Admin':'Operador'}">${who.i}</div></header>
+  <main class="content" id="view"></main>
+ </div></div>`;
+ r.fn(document.getElementById('view'),r);
+}
+const closeMenu=()=>document.getElementById('side')?.classList.remove('open');
+
+/* ============ Login ============ */
+function vLogin(){
+ return `<div class="login"><div class="card"><div class="brand" style="border:0;padding:0"><div class="logo">a</div><b>automatix<span>360</span></b>
+ <button class="icon-btn theme" onclick="toggleTheme()">${I.moon}</button></div>
+ <h2>Iniciar sesión</h2><p class="sub" style="margin-bottom:18px">Acceso para operadores</p>
+ <form id="lf" novalidate>
+  <div class="field"><label>Email</label><input class="inp" id="le" type="email" placeholder="correo@empresa.com" autocomplete="username" required></div>
+  <div class="field"><label>Contraseña</label><input class="inp" id="lp" type="password" autocomplete="current-password" required></div>
+  <div class="err" id="lerr"></div>
+  <button class="btn primary" style="width:100%;justify-content:center">Entrar</button>
+ </form>
+ <div class="demo">Demo — acceso rápido:<br>
+  <button class="btn" data-q="admin">Administrador</button>
+  ${ops.map(o=>`<button class="btn" data-q="${o.id}">${esc(o.nombre)}${o.activo?'':' (inactivo)'}</button>`).join('')}
+  <div style="margin-top:8px">Contraseña demo de operadores: <b>1234</b></div></div></div></div>`;
+}
+function bindLogin(){
+ const f=document.getElementById('lf');
+ f.onsubmit=e=>{e.preventDefault();
+  const em=le.value,pw=lp.value;
+  if(!/^\S+@\S+\.\S+$/.test(em)){lerr.textContent='Ingresa un correo válido.';return}
+  const err=login(em,pw);if(err){lerr.textContent=err;return}
+  location.hash='#/calendario';render();
+ };
+ document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{
+  if(b.dataset.q==='admin'){session={role:'admin'};SV('session',session);location.hash='#/reports';render();return}
+  const o=ops.find(x=>x.id==b.dataset.q);le.value=o.email;lp.value=o.pass;lerr.textContent='';
+ });
+}
+
+/* ============ Reports (hub) ============ */
+function vReports(v){
+ const sent=NOTIFS.filter(n=>n[3]==='Sent').length,fail=NOTIFS.length-sent;
+ const C=2*Math.PI*40,a=C*sent/NOTIFS.length;
+ const days=[3,5,2,6,4,1,5],mx=Math.max(...days);
+ v.innerHTML=`<h2 class="title">Reports</h2><p class="sub">Elige un reporte para ver el detalle.</p>
+ <div class="grid2">
+  <button class="card tile" onclick="location.hash='#/reports/notificaciones'">
+   <h3>Historial de notificaciones</h3><p>Estadística de mensajes de WhatsApp y correo</p>
+   <div class="stats">
+    <svg width="120" height="120" viewBox="0 0 100 100" role="img" aria-label="Enviados ${sent}, fallidos ${fail}">
+     <circle cx="50" cy="50" r="40" fill="none" stroke="var(--bad)" stroke-width="14"/>
+     <circle class="ring-ok" cx="50" cy="50" r="40" fill="none" stroke="var(--ok)" stroke-width="14" style="--a:${a};--c:${C}" stroke-dasharray="${a} ${C}" transform="rotate(-90 50 50)"/>
+     <text x="50" y="55" text-anchor="middle" font-size="18" font-weight="700" fill="var(--text)"><tspan data-count="${Math.round(sent/NOTIFS.length*100)}" data-suf="%">0%</tspan></text></svg>
+    <div class="legend"><span><i class="dot" style="background:var(--ok)"></i>Enviados: <b data-count="${sent}">0</b></span><span><i class="dot" style="background:var(--bad)"></i>Fallidos: <b data-count="${fail}">0</b></span>
+     <svg width="130" height="46" viewBox="0 0 130 46">${days.map((d,i)=>`<rect class="bar" style="animation-delay:${.4+i*.08}s" x="${i*19}" y="${46-d/mx*44}" width="13" height="${d/mx*44}" rx="3" fill="var(--brand)" opacity=".8"/>`).join('')}</svg>
+     <small style="color:var(--muted)">Últimos 7 días</small></div>
+   </div>
+   <div class="cta"><span>Ver historial</span><span>→</span></div>
+  </button>
+  <button class="card tile" onclick="location.hash='#/reports/citas'">
+   <h3>Reporte de citas</h3><p>Detalle de citas por cliente, operador y estado</p>
+   <div class="docs"><div class="sheet-wrap"><div class="sheet s2"><i></i><i></i><i></i></div><div class="sheet"><i></i><i></i><i></i><i></i><i></i></div></div>
+    <div class="kpi"><b data-count="${CITAS.length}">0</b><span>citas registradas</span></div></div>
+   <div class="cta"><span>Abrir reporte</span><span>→</span></div>
+  </button>
+ </div>`;
+ v.querySelectorAll('[data-count]').forEach(el=>{
+  const to=+el.dataset.count,suf=el.dataset.suf||'',reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  if(reduce){el.textContent=to+suf;return}
+  const t0=performance.now(),dur=1200;
+  const step=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(to*e)+suf;if(k<1&&el.isConnected)requestAnimationFrame(step)};
+  requestAnimationFrame(step);
+ });
+}
+
+/* ============ Historial de notificaciones ============ */
+function vNotifs(v){
+ v.innerHTML=`<a class="back" href="#/reports">${I.back}Reports</a><h2 class="title">Historial de notificaciones</h2>
+ <p class="sub">Mensajes de WhatsApp y correo enviados a los clientes.</p>
+ <div class="tools"><div class="field" style="flex:1"><input class="inp" id="q" placeholder="Buscar por número, nombre o apellido…"></div></div>
+ <div class="tablewrap"><table><thead><tr><th>Destinatario</th><th>Tipo</th><th>Nombre y apellido</th><th>Fecha y hora</th><th>Estado del envío</th></tr></thead><tbody id="tb"></tbody></table></div>
+ <p class="note">«Enviado» significa aceptado por el gateway, no entregado.</p>`;
+ const draw=()=>{const q=document.getElementById('q').value.toLowerCase();
+  const rows=NOTIFS.filter(n=>(n[0]+n[1]).toLowerCase().includes(q));
+  tb.innerHTML=rows.map(n=>`<tr><td>${n[0]}</td><td>Confirmación de reserva</td><td>${n[1]}</td><td>${fmtF(n[2])}</td><td><span class="badge ${n[3]==='Sent'?'b-ok':'b-bad'}">${n[3]}</span></td></tr>`).join('')||'<tr><td colspan="5" class="empty">Sin resultados</td></tr>'};
+ q.oninput=draw;draw();
+}
+
+/* ============ Reporte de citas ============ */
+let FL={desde:'2026-09-14',hasta:'2026-10-31',estado:'',op:''};
+function filtradas(){
+ const d=FL.desde?new Date(FL.desde+'T00:00:00').getTime():-Infinity,h=FL.hasta?new Date(FL.hasta+'T23:59:59').getTime():Infinity;
+ return CITAS.filter(c=>c.fecha>=d&&c.fecha<=h&&(!FL.estado||c.estado===FL.estado)&&(!FL.op||c.operador===FL.op));
+}
+const COLS=['Cliente','Fecha y hora','Operador','Teléfono','Duración','Notas','Estado'];
+const rowArr=c=>[c.cliente,fmtF(c.fecha),c.operador,c.tel,c.dur+' min',c.notas,c.estado];
+function vCitas(v){
+ const opn=[...new Set(CITAS.map(c=>c.operador))];
+ v.innerHTML=`<a class="back" href="#/reports">${I.back}Reports</a><h2 class="title">Reporte de citas</h2>
+ <p class="sub">Filtra por rango de fechas y exporta el resultado.</p>
+ <div class="tools">
+  <div class="field"><label>Desde</label><input class="inp" type="date" id="fd" value="${FL.desde}"></div>
+  <div class="field"><label>Hasta</label><input class="inp" type="date" id="fh" value="${FL.hasta}"></div>
+  <div class="field"><label>Estado</label><select class="inp" id="fe"><option value="">Todos</option>${ESTADOS.map(e=>`<option ${FL.estado===e?'selected':''}>${e}</option>`).join('')}</select></div>
+  <div class="field"><label>Operador</label><select class="inp" id="fo"><option value="">Todos</option>${opn.map(e=>`<option ${FL.op===e?'selected':''}>${e}</option>`).join('')}</select></div>
+  <button class="btn primary" id="bs">Buscar</button><button class="btn" id="bx">${I.xls}Excel</button><button class="btn primary" id="bp">${I.pdf}PDF</button>
+ </div>
+ <div id="res"></div>`;
+ const draw=()=>{
+  const rows=filtradas();
+  const tbl=`<div class="tablewrap desk"><table><thead><tr>${COLS.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody>${rows.map(c=>`<tr><td>${esc(c.cliente)}</td><td>${fmtF(c.fecha)}</td><td>${esc(c.operador)}</td><td>${c.tel}</td><td>${c.dur} min</td><td class="notes">${esc(c.notas)}</td><td><span class="badge ${EST_CLS[c.estado]}">${c.estado}</span></td></tr>`).join('')}</tbody></table></div>`;
+  const mob=`<div class="cards-m">${rows.map(c=>`<div class="card mc"><div class="h"><b>${esc(c.cliente)}</b><span class="badge ${EST_CLS[c.estado]}">${c.estado}</span></div><dl><dt>Fecha</dt><dd>${fmtF(c.fecha)}</dd><dt>Operador</dt><dd>${esc(c.operador)}</dd><dt>Teléfono</dt><dd>${c.tel}</dd><dt>Duración</dt><dd>${c.dur} min</dd><dt>Notas</dt><dd>${esc(c.notas)}</dd></dl></div>`).join('')}</div>`;
+  res.innerHTML=rows.length?`<p class="note" style="margin-top:0">${rows.length} cita(s) encontrada(s)</p>${tbl}${mob}`:'<div class="card empty">No hay citas en el rango seleccionado.</div>';
+ };
+ const buscar=()=>{
+  if(fd.value&&fh.value&&fd.value>fh.value)return toast('La fecha "Desde" no puede ser posterior a "Hasta"');
+  FL={desde:fd.value,hasta:fh.value,estado:fe.value,op:fo.value};draw();
+ };
+ bs.onclick=buscar;
+ [fd,fh,fe,fo].forEach(e=>e.onkeydown=ev=>{if(ev.key==='Enter')buscar()});
+ draw();
+ bx.onclick=()=>exportXlsx(filtradas());bp.onclick=()=>exportPdf(filtradas());
+}
+function exportXlsx(rows){
+ if(!rows.length)return toast('No hay datos para exportar');
+ if(!window.XLSX)return toast('Librería Excel no disponible (sin conexión)');
+ const ws=XLSX.utils.aoa_to_sheet([COLS,...rows.map(rowArr)]);
+ ws['!cols']=[22,18,22,16,10,32,12].map(w=>({wch:w}));
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Citas');
+ XLSX.writeFile(wb,`reporte-citas_${FL.desde||'inicio'}_${FL.hasta||'fin'}.xlsx`);
+}
+function exportPdf(rows){
+ if(!rows.length)return toast('No hay datos para exportar');
+ if(!window.jspdf)return toast('Librería PDF no disponible (sin conexión)');
+ const doc=new jspdf.jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+ doc.setFontSize(16);doc.text('Reporte de citas',40,40);
+ doc.setFontSize(10);doc.text(`Rango: ${FL.desde||'—'} a ${FL.hasta||'—'}  ·  ${rows.length} citas`,40,58);
+ doc.autoTable({startY:72,head:[COLS],body:rows.map(rowArr),styles:{fontSize:8.5,cellPadding:4},headStyles:{fillColor:[109,40,217]},columnStyles:{5:{cellWidth:150}}});
+ doc.save(`reporte-citas_${FL.desde||'inicio'}_${FL.hasta||'fin'}.pdf`);
+}
+
+/* ============ Calendario ============ */
+let calState={mode:'mine',m:0};
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const NA=()=>toast('No disponible en este prototipo');
+function vCal(v){
+ const me=session.role==='op'?ops.find(x=>x.id===session.id):null;
+ const myName=me?me.nombre+' '+me.apellido:null;
+ if(!me)calState.mode='all';
+ const first=new Date(2026,9+calState.m,1);
+ const lead=(first.getDay()+6)%7;
+ const start=new Date(first);start.setDate(1-lead);
+ const todayIso='2026-10-13';
+ const evs=CITAS.filter(c=>c.estado!=='Cancelada'&&c.estado!=='Rechazada'&&(calState.mode==='all'||c.operador===myName));
+ const hh=c=>String(new Date(c.fecha).getHours()).padStart(2,'0')+':'+String(new Date(c.fecha).getMinutes()).padStart(2,'0');
+ const cells=[];
+ for(let i=0;i<42;i++){
+  const d=new Date(start);d.setDate(start.getDate()+i);
+  if(i>=35&&d.getMonth()!==first.getMonth())break;
+  const e=evs.filter(c=>iso(c.fecha)===iso(d));
+  cells.push(`<div class="cell ${d.getDay()%6===0?'we':''} ${d.getMonth()!==first.getMonth()?'out':''} ${iso(d)===todayIso?'today':''}"><span class="n">${d.getDate()}</span>${e.slice(0,2).map(c=>`<div class="ev" title="${esc(c.cliente)} · ${esc(c.operador)} · ${c.dur} min">${hh(c)} ${esc(c.cliente.split(' ')[0])}</div>`).join('')}${e.length>2?`<div class="more">+${e.length-2} más</div>`:''}</div>`);
+ }
+ v.innerHTML=`<div class="page-head"><div><h2 class="title">Calendario</h2><p class="sub">Gestiona citas, contactos y disponibilidad de tu estudio.</p></div>
+  <div class="acts"><button class="btn sm off" onclick="NA()">Directorio</button>
+   ${session.role==='admin'?`<a class="btn sm" href="#/operadores" style="text-decoration:none">Configuración</a>`:''}
+   <button class="btn sm primary off" onclick="NA()">+ Nueva cita</button></div></div>
+  ${me?`<div class="seg"><button class="${calState.mode==='mine'?'on':''}" data-m="mine">Mi calendario</button><button class="${calState.mode==='all'?'on':''}" data-m="all">General</button></div>`:''}
+  <div class="calbox"><div class="calbar"><button class="nbtn" id="pv">‹</button><div class="ttl"><i></i>${MESES[first.getMonth()]} <span>${first.getFullYear()}</span></div><button class="hoy" id="hoy">Hoy</button><button class="nbtn" id="nx">›</button></div>
+  <div class="dow">${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].map(d=>`<div>${d}</div>`).join('')}</div>
+  <div class="mgrid">${cells.join('')}</div></div>`;
+ v.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{calState.mode=b.dataset.m;vCal(v)});
+ pv.onclick=()=>{calState.m--;vCal(v)};nx.onclick=()=>{calState.m++;vCal(v)};hoy.onclick=()=>{calState.m=0;vCal(v)};
+}
+
+/* ============ Operadores ============ */
+const CABINAS=['Sala Principal','Sala Secundaria'];
+const PREF=['+593','+39','+34','+1'];
+function opForm(o,isNew){
+ const k=isNew?'new':o.id;
+ return `<div class="card opcard" data-k="${k}">
+  <div class="head">${isNew?'':`<div class="avatar">${(o.nombre[0]+o.apellido[0]).toUpperCase()}</div>`}<div><b>${isNew?'Nuevo operador':esc(o.nombre+' '+o.apellido)}</b><div style="color:var(--muted);font-size:12.5px">${isNew?'Añade un miembro del equipo':(o.activo?'Puede iniciar sesión':'Sin acceso al sistema')}</div></div></div>
+  <div class="row">
+   <div class="field"><label>Nombre</label><input class="inp" name="nombre" value="${isNew?'':esc(o.nombre)}" placeholder="Nombre"></div>
+   <div class="field"><label>Apellido</label><input class="inp" name="apellido" value="${isNew?'':esc(o.apellido)}" placeholder="Apellido"></div>
+   <div class="field"><label>Email *</label><input class="inp" name="email" type="email" value="${isNew?'':esc(o.email)}" placeholder="correo@empresa.com"></div>
+   <div class="field"><label>Contraseña ${isNew?'*':''}</label><input class="inp" name="pass" type="password" placeholder="${isNew?'Contraseña':'Sin cambios'}"></div>
+   <div class="field"><label>Prefijo</label><select class="inp" name="pref">${PREF.map(p=>`<option ${(!isNew&&o.pref===p)?'selected':''}>${p}</option>`).join('')}</select></div>
+   <div class="field"><label>Teléfono</label><input class="inp" name="tel" value="${isNew?'':esc(o.tel)}" placeholder="Número sin prefijo"></div>
+   <div class="field"><label>Estado</label><select class="inp" name="activo"><option value="1" ${isNew||o.activo?'selected':''}>● Activo</option><option value="0" ${!isNew&&!o.activo?'selected':''}>○ Inactivo</option></select></div>
+  </div>
+  <div class="field" style="margin-top:12px"><label>Cabinas asignadas</label><div class="chips">${CABINAS.map(c=>`<button type="button" class="chip ${!isNew&&o.cabinas.includes(c)?'on':''}" data-c="${c}">${c}</button>`).join('')}</div></div>
+  <div class="err"></div>
+  <div style="display:flex;gap:8px"><button class="btn ${isNew?'primary':''}" data-act="save">${isNew?'Crear':I.save+'Guardar'}</button>${isNew?'':`<button class="btn danger" data-act="del" title="Eliminar">${I.trash}</button>`}</div>
+ </div>`;
+}
+function vOps(v){
+ const sm=(t,d,ic,cl)=>`<div class="${cl||'off'}" ${cl?'':'onclick="NA()"'}><span class="ic">${ic}</span><span><b>${t}</b><small>${d}</small></span></div>`;
+ v.innerHTML=`<a class="back" href="#/calendario">${I.back}Calendario</a><h2 class="title">Configuración del calendario</h2><p class="sub">Gestiona el perfil del estudio, cabinas, servicios, horarios y operadores. Un operador <b>activo</b> puede iniciar sesión con su correo; al inactivarlo pierde el acceso.</p>
+ <div class="cfg"><div class="cfgnav">${sm('Estudio','Identidad y configuración','▦')}${sm('Cabinas','Cabinas y puestos','▢')}${sm('Servicios','Servicios y precios','⚡')}${sm('Horarios','Horarios de apertura','◷')}${sm('Operadores','Personal y roles',I.ops,'on')}${sm('Notificaciones','Mensajes WhatsApp','🔔')}</div>
+ <div>${opForm(null,true)}${ops.map(o=>opForm(o,false)).join('')}</div></div>`;
+ v.querySelectorAll('.chip').forEach(c=>c.onclick=()=>c.classList.toggle('on'));
+ v.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{
+  const card=b.closest('.opcard'),k=card.dataset.k,g=n=>card.querySelector(`[name=${n}]`).value.trim(),err=card.querySelector('.err');
+  if(b.dataset.act==='del'){
+   if(!confirm('¿Eliminar este operador?'))return;
+   ops=ops.filter(o=>o.id!=k);SV('ops',ops);if(session.role==='op'&&session.id==k)logout();toast('Operador eliminado');return vOps(v);
+  }
+  if(!g('nombre')||!g('apellido')){err.textContent='Nombre y apellido son obligatorios.';return}
+  if(!/^\S+@\S+\.\S+$/.test(g('email'))){err.textContent='El correo es obligatorio y debe ser válido.';return}
+  if(ops.some(o=>o.id!=k&&o.email.toLowerCase()===g('email').toLowerCase())){err.textContent='Ese correo ya está en uso.';return}
+  if(k==='new'&&!g('pass')){err.textContent='Define una contraseña.';return}
+  const cab=[...card.querySelectorAll('.chip.on')].map(c=>c.dataset.c);
+  const data={nombre:g('nombre'),apellido:g('apellido'),email:g('email'),pref:g('pref'),tel:g('tel'),activo:g('activo')==='1',cabinas:cab};
+  if(k==='new')ops.push({id:Date.now(),pass:g('pass'),...data});
+  else{const o=ops.find(o=>o.id==k);Object.assign(o,data);if(g('pass'))o.pass=g('pass')}
+  SV('ops',ops);toast(k==='new'?'Operador creado':'Cambios guardados');vOps(v);
+ });
+}
+render();
+</script>
+</body>
+</html>
